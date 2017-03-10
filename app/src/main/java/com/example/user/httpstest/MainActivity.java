@@ -4,6 +4,7 @@ import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.renderscript.ScriptGroup;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
@@ -16,6 +17,7 @@ import android.widget.Toast;
 
 import com.kosalgeek.asynctask.PostResponseAsyncTask;
 
+import org.apache.commons.io.IOUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -318,7 +320,7 @@ public class MainActivity extends AppCompatActivity {
         return sb.toString();
 
     }
-    class MyAsyncTask extends AsyncTask<String, String, Void> {
+    class MyAsyncTask extends AsyncTask<String, String, String> {
 
         private ProgressDialog progressDialog = new ProgressDialog(MainActivity.this);
         InputStream inputStream = null;
@@ -335,24 +337,40 @@ public class MainActivity extends AppCompatActivity {
         }
 
         @Override
-        protected Void doInBackground(String... params) {
+        protected String doInBackground(String... params) {
 
             //String url_select = "https://raw.githubusercontent.com/usagitoneko97/Stm32-and-nfc02A1-led-control/finalOfLayout/jsonDummy1.json";
            // String url_select = "https://quarkbackend.com/getfile/hogouxian/jsontest";
             ArrayList<NameValuePair> param = new ArrayList<NameValuePair>();
 
+            BufferedReader reader = null;
             try {
                 // Set up HTTP post
                 // HttpClient is more then less deprecated. Need to change to URLConnection
-                URL url = new URL("https://raw.githubusercontent.com/usagitoneko97/Stm32-and-nfc02A1-led-control/finalOfLayout/jsonDummy.json");
+                URL url = new URL("https://api.myjson.com/bins/154uzb");
                 HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
                 try {
                     inputStream = new BufferedInputStream(urlConnection.getInputStream());
-                    Log.d(inputStringToString(inputStream), "inputstream");
+                    Log.v(inputStringToString(inputStream), "inputstream");
 
+                    String data = IOUtils.toString(inputStream,"UTF-8");
+                    Log.d(data, "data!!!:");
+                    reader = new BufferedReader(new InputStreamReader(inputStream));
+                    StringBuffer buffer = new StringBuffer();
+
+                    String line = "";
+                    while ((line = reader.readLine()) != null) {
+                        buffer.append(line + "\n");
+                        Log.e(buffer.toString(), "buffer");
+                    }
+                    return buffer.toString();
+                    //inputStream.close();
+                    //result = sBuilder.toString();
+                    //return (inputStringToString(inputStream));
                     //Toast.makeText(MainActivity.this, getStringFromInputStream(in), Toast.LENGTH_SHORT).show();
                 } finally {
                     urlConnection.disconnect();
+                    reader.close();
                 }
 
                 // Read content & Log
@@ -370,26 +388,14 @@ public class MainActivity extends AppCompatActivity {
                 e4.printStackTrace();
             }
             // Convert response to string using String Builder
-            try {
-                BufferedReader bReader = new BufferedReader(new InputStreamReader(inputStream, "utf-8"), 8);
-                StringBuilder sBuilder = new StringBuilder();
 
-                String line = null;
-                while ((line = bReader.readLine()) != null) {
-                    sBuilder.append(line + "\n");
-                }
-
-                inputStream.close();
-                result = sBuilder.toString();
-
-            } catch (Exception e) {
-                Log.e("StringBuilding & ", "Error converting result " + e.toString());
-            }
             return null;
         }
-        protected void onPostExecute(Void v) {
+        protected void onPostExecute(String result) {
+            super.onPostExecute(result);
+            Log.v(result, "result");
             //parse JSON data
-            Toast.makeText(MainActivity.this, result, Toast.LENGTH_SHORT).show();
+            /*Toast.makeText(MainActivity.this, result, Toast.LENGTH_SHORT).show();
             try {
                 JSONArray jArray = new JSONArray(result);
                 for(int i=0; i < jArray.length(); i++) {
@@ -404,7 +410,7 @@ public class MainActivity extends AppCompatActivity {
                 this.progressDialog.dismiss();
             } catch (JSONException e) {
                 Log.e("JSONException", "Error: " + e.toString());
-            } // catch (JSONException e)
+            } // catch (JSONException e)*/
         } // protected void onPostExecute(Void v)
     }
 
